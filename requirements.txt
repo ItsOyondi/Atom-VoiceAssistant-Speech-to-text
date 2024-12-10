@@ -36,3 +36,6 @@ torchaudio
 SpeechRecognition
 streamlit_audiorec
 websockets
+gevent-websocket
+flask-sockets
+ffmpeg-python

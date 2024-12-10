@@ -7,7 +7,10 @@ import spacy
 import asyncio
 import time
 from mods import kmns
-from mods import km
+# from mods import km
+
+# Set page configuration
+st.set_page_config(page_title="Interview Assistant", layout="wide")
 
 # Initialize OpenAI client with Groq's API
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
@@ -64,8 +67,7 @@ def extract_skills(text):
 
 # Main function
 async def main():
-    # Set page configuration
-    st.set_page_config(page_title="Interview Assistant", layout="wide")
+    
 
     st.sidebar.subheader("⚙️ Settings")
     response_length = st.sidebar.slider("Response Length (words)", 50, 500, 100)
@@ -108,19 +110,15 @@ async def main():
                     - If you're unsure of how to respond, refer back to the provided experience for guidance.
                 """
         ########## End of system prompt
-
+        #start kmns 
         if start_button:
             st.session_state.transcriptions.clear()
-            km.stop_signal.clear()
-            km.start_audio_server()
-            time.sleep(1)
-            km.inject_audio_capture_js()
-            km.threading.Thread(target=km.capture_audio, daemon=True).start()
-            km.threading.Thread(target=km.process_audio, daemon=True).start()
-
-        if stop_button:
-            kmns.stop_signal.set()
-            st.warning("Interview Finished. Processing stopped!")
+            kmns.stop_signal.clear()
+            kmns.transcription_results.clear()
+            # kmns.audio_queue.queue.clear()
+            
+            kmns.threading.Thread(target=kmns.capture_audio, args=(16000, 5), daemon=True).start()
+            kmns.threading.Thread(target=kmns.process_audio, args=(16000, 15, 2, model_name), daemon=True).start()
 
         st.markdown("### Answers:")
         transcription_area = st.empty()
@@ -131,7 +129,7 @@ async def main():
                     interviewer_questions = [
                         result.split(": ", 1)[1]
                         for result in kmns.transcription_results
-                        if (result.startswith("interviewer:") or result.startswith("others:")) and ": " in result
+                        if (result.startswith("interviewer") or result.startswith("others:")) and ": " in result
                     ]
                     kmns.transcription_results.clear()
 
@@ -143,12 +141,9 @@ async def main():
                     # ]
 
                     for question in interviewer_questions:
-                        if question == "1.5%":
-                            continue
-                        else:
-                            response = await get_groq_chat_response_async(question, primer, model_choice)
-                            formatted_output = f"**Question:** {question} \n\n**Response:** {response}\n"
-                            st.session_state.transcriptions.append(formatted_output)
+                        response = await get_groq_chat_response_async(question, primer, model_choice)
+                        formatted_output = f"**Question:** {question} \n\n**Response:** {response}\n"
+                        st.session_state.transcriptions.append(formatted_output)
 
                     transcription_area.markdown("\n".join(st.session_state.transcriptions))
 
