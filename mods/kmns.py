@@ -58,7 +58,7 @@ def process_audio(sr=16000, thresh=15, k=3, model_name="base"):
                 break
 
             # Voice Activity Detection (VAD)
-            frame_length = 2048
+            frame_length = 1024
             hop_length = 512
             energy = librosa.feature.rms(y=audio_chunk, frame_length=frame_length, hop_length=hop_length).flatten()
             threshold = np.percentile(energy, thresh)

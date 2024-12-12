@@ -67,8 +67,6 @@ def extract_skills(text):
 
 # Main function
 async def main():
-    
-
     st.sidebar.subheader("⚙️ Settings")
     response_length = st.sidebar.slider("Response Length (words)", 50, 500, 100)
     model_choice = st.sidebar.selectbox(
@@ -152,6 +150,11 @@ async def main():
         # Start the transcription update task
         if start_button:
             await update_transcriptions()
+        
+        if stop_button:
+            kmns.stop_signal.set()
+            st.warning("Interview Finished. Processing stopped!")
+
 
     with right_col:
         # st.subheader("🔑 Skills from job description")
